@@ -9,7 +9,7 @@ The project is split into two main parts:
 ## 📋 Prerequisites
 
 Before you begin, ensure you have the following installed on your machine:
-* **Python 3.8+** (for the backend)
+* **Python 3.12** (for the backend)
 * **Node.js 18+** and **npm** (for the frontend)
 * **Git** (to clone the repository)
 
