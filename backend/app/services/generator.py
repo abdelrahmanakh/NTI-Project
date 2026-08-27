@@ -5,8 +5,13 @@ from pydantic import BaseModel
 from google import genai
 from groq import Groq
 from google.genai import types
-from app.core.config import GEMINI_API_KEY
+from app.core.config import GEMINI_API_KEY, GEMINI_CHAT_MODEL, GROQ_API_KEY, GROQ_CHAT_MODEL, GROQ_FALLBACK_MODEL_1, GROQ_FALLBACK_MODEL_2
 
+GROQ_MODELS = [
+    GROQ_CHAT_MODEL,
+    GROQ_FALLBACK_MODEL_1,
+    GROQ_FALLBACK_MODEL_2,
+]
 
 class HybridGenerator:
     """
@@ -23,7 +28,7 @@ class HybridGenerator:
 
     def __init__(
         self,
-        gemini_model: str = "gemini-3.6-flash",
+        gemini_model: str = GEMINI_CHAT_MODEL,
         groq_models: Optional[list[str]] = None,
     ):
 
@@ -45,36 +50,19 @@ class HybridGenerator:
         # GROQ
         # =====================================================
 
-        groq_api_key = os.getenv(
-            "GROQ_API_KEY"
-        )
-
         self.groq_client = None
 
-        if groq_api_key:
+        if GROQ_API_KEY:
 
             self.groq_client = Groq(
-                api_key=groq_api_key
+                api_key=GROQ_API_KEY
             )
 
         # =====================================================
         # FALLBACK MODELS
         # =====================================================
 
-        self.groq_models = groq_models or [
-
-            # Primary Groq model
-            os.getenv(
-                "GROQ_CHAT_MODEL",
-                "openai/gpt-oss-120b",
-            ),
-
-            # Fallback
-            "meta-llama/llama-4-scout-17b-16e-instruct",
-
-            # Another fallback
-            "qwen/qwen3-32b",
-        ]
+        self.groq_models = groq_models or GROQ_MODELS
 
     # =========================================================
     # CONTEXT BUILDER
@@ -119,15 +107,15 @@ class HybridGenerator:
 
             context_parts.append(
                 f"""
-SOURCE {i}
+                SOURCE {i}
 
-Source: {source}
-Page: {page}
-Timestamp: {timestamp_start} -> {timestamp_end}
+                Source: {source}
+                Page: {page}
+                Timestamp: {timestamp_start} -> {timestamp_end}
 
-Content:
-{text}
-"""
+                Content:
+                {text}
+                """
             )
 
         return "\n".join(context_parts)
@@ -143,32 +131,32 @@ Content:
     ) -> str:
 
         return f"""
-You are an evidence-grounded AI learning assistant.
+                You are an evidence-grounded AI learning assistant.
 
-Your job is to answer the user's question using ONLY
-the retrieved context.
+                Your job is to answer the user's question using ONLY
+                the retrieved context.
 
-IMPORTANT RULES:
+                IMPORTANT RULES:
 
-1. Do not invent information.
-2. Do not use outside knowledge when answering.
-3. If the context is insufficient, say so clearly.
-4. Explain concepts in a clear educational way.
-5. When possible, mention the source.
-6. If the source is a YouTube video and timestamps
-   are available, mention the relevant timestamp.
-7. Distinguish facts from explanations.
+                1. Do not invent information.
+                2. Do not use outside knowledge when answering.
+                3. If the context is insufficient, say so clearly.
+                4. Explain concepts in a clear educational way.
+                5. When possible, mention the source.
+                6. If the source is a YouTube video and timestamps
+                are available, mention the relevant timestamp.
+                7. Distinguish facts from explanations.
 
-USER QUESTION:
+                USER QUESTION:
 
-{question}
+                {question}
 
-RETRIEVED CONTEXT:
+                RETRIEVED CONTEXT:
 
-{context}
+                {context}
 
-ANSWER:
-"""
+                ANSWER:
+                """
 
     # =========================================================
     # GEMINI

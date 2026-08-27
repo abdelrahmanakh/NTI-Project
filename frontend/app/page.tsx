@@ -431,7 +431,7 @@ export default function EducationalChatbot() {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-3 py-2 space-y-1 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto px-3 py-2 space-y-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-3 block mb-3">
             Recent Sessions
           </span>

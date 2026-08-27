@@ -6,8 +6,8 @@ class DocumentChunk:
     """A unified chunk extracted from any document or media."""
     text: str
     source: str
-    page: Optional[int | str] = None
     chunk_id: str
+    page: Optional[int | str] = None
     url: Optional[str] = None
     video_id: Optional[str] = None
     start_time: Optional[float] = None
@@ -122,7 +122,6 @@ class VideoChunker:
                         DocumentChunk(
                             text=combined_text,
                             source="youtube",
-                            page=0,
                             chunk_id=f"youtube_{video_id}_chunk_{chunk_index}",
                             url=video_url,
                             video_id=video_id,
@@ -144,7 +143,6 @@ class VideoChunker:
                     DocumentChunk(
                         text=combined_text,
                         source="youtube",
-                        page=0,
                         chunk_id=f"youtube_{video_id}_chunk_{chunk_index}",
                         url=video_url,
                         video_id=video_id,

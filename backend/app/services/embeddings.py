@@ -436,36 +436,3 @@ class GeminiEmbedder:
         )
 
         return embeddings
-
-    # =========================================================
-    # SAFE BATCH
-    # =========================================================
-
-    def embed_batch_safe(
-        self,
-        texts: Iterable[str],
-    ) -> list[list[float]]:
-        """
-        Safe helper for pipelines.
-
-        Unlike embed_batch(), this method allows empty
-        input and returns [].
-
-        Useful when processing optional sources.
-        """
-
-        if texts is None:
-
-            return []
-
-        texts = list(
-            texts
-        )
-
-        if not texts:
-
-            return []
-
-        return self.embed_batch(
-            texts
-        )
