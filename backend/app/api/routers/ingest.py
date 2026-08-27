@@ -1,6 +1,7 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Form
 import shutil
 from app.models.schemas import YouTubeIngestRequest
+from app.core.dependencies import video_chunker
 
 # Import the shared instances
 from app.core.dependencies import (
@@ -41,19 +42,21 @@ async def ingest_pdf(file: UploadFile = File(...), session_id: str = Form(...)):
 @router.post("/youtube")
 async def ingest_youtube(request: YouTubeIngestRequest):
     try:
-        # 1. Parse YouTube transcript & create timestamp-aware chunks
-        # Your YouTubeProcessor already handles chunking internally
-        chunks_data = yt_processor.process(request.url)
+        # 1. Fetch raw transcript data
+        transcript_data = yt_processor.process(request.url)
         
-        # 2. Generate embeddings
-        texts_to_embed = [chunk["text"] for chunk in chunks_data]
+        # 2. Split into standardized DocumentChunks
+        chunks = video_chunker.split(transcript_data, request.url)
+        
+        # 3. Generate embeddings
+        texts_to_embed = [chunk.text for chunk in chunks]
         embeddings = embedder.embed_batch(texts_to_embed)
         
-        # 3. Store in ChromaDB
-        vector_store.add_documents(chunks_data, embeddings, session_id=request.session_id)
+        # 4. Store in ChromaDB
+        vector_store.add_documents(chunks, embeddings, session_id=request.session_id)
         
-        return {"status": "success", "message": "Successfully ingested YouTube video", "chunks_processed": len(chunks_data)}
-    
+        return {"status": "success", "message": "Successfully ingested YouTube video", "chunks_processed": len(chunks)}
+        
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     

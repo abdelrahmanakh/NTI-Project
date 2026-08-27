@@ -12,7 +12,7 @@ from app.services.learning_tools import LearningTools
 from app.services.podcast import PodcastGenerator
 from app.services.ingestion import PDFLoader
 from app.services.youtube_processor import YouTubeProcessor
-from app.services.chunking import TextChunker
+from app.services.chunking import TextChunker, VideoChunker
 from app.services.image_processor import GeminiImageProcessor
 
 # Directories
@@ -36,6 +36,7 @@ podcast_gen = PodcastGenerator(output_dir=DATA_DIR / "podcasts")
 pdf_loader = PDFLoader()
 yt_processor = YouTubeProcessor()
 chunker = TextChunker()
+video_chunker = VideoChunker(chunk_duration=60.0)
 
 image_processor = GeminiImageProcessor()
 
