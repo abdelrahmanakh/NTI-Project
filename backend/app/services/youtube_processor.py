@@ -21,10 +21,6 @@ class YouTubeProcessor:
         Fetch transcript
             ↓
         Clean transcript
-            ↓
-        Timestamp-aware chunks
-            ↓
-        Documents ready for embedding
     """
 
     def __init__(
@@ -247,38 +243,6 @@ class YouTubeProcessor:
         return text.strip()
 
     # ============================================================
-    # FORMAT TIME
-    # ============================================================
-
-    @staticmethod
-    def format_timestamp(
-        seconds: float,
-    ) -> str:
-        """
-        Convert seconds to HH:MM:SS.
-        """
-
-        seconds = int(
-            max(0, seconds)
-        )
-
-        hours = seconds // 3600
-
-        minutes = (
-            seconds % 3600
-        ) // 60
-
-        secs = (
-            seconds % 60
-        )
-
-        return (
-            f"{hours:02d}:"
-            f"{minutes:02d}:"
-            f"{secs:02d}"
-        )
-
-    # ============================================================
     # FETCH TRANSCRIPT
     # ============================================================
 
@@ -415,234 +379,20 @@ class YouTubeProcessor:
         return data
 
     # ============================================================
-    # CREATE TIMESTAMP CHUNKS
-    # ============================================================
-
-    def create_chunks(
-        self,
-        transcript_data: dict,
-        video_url: str,
-    ) -> list[dict]:
-        """
-        Group transcript snippets into
-        timestamp-aware RAG chunks.
-        """
-
-        snippets = transcript_data[
-            "snippets"
-        ]
-
-        video_id = transcript_data[
-            "video_id"
-        ]
-
-        chunks = []
-
-        current_text = []
-
-        chunk_start = None
-
-        chunk_end = None
-
-        chunk_index = 0
-
-        for snippet in snippets:
-
-            start = float(
-                snippet["start"]
-            )
-
-            end = float(
-                snippet["end"]
-            )
-
-            text = snippet["text"]
-
-            if chunk_start is None:
-
-                chunk_start = start
-
-            current_text.append(
-                text
-            )
-
-            chunk_end = end
-
-            elapsed = (
-                chunk_end
-                - chunk_start
-            )
-
-            if (
-                elapsed
-                >= self.chunk_duration
-            ):
-
-                combined_text = (
-                    " ".join(
-                        current_text
-                    ).strip()
-                )
-
-                if combined_text:
-
-                    chunks.append(
-                        {
-                            "text": combined_text,
-                            "page": 0,
-                            "source": "youtube",
-                            "video_id": video_id,
-                            "url": video_url,
-                            "start_time": chunk_start,
-                            "end_time": chunk_end,
-                            "start_timestamp": (
-                                self.format_timestamp(
-                                    chunk_start
-                                )
-                            ),
-                            "end_timestamp": (
-                                self.format_timestamp(
-                                    chunk_end
-                                )
-                            ),
-                            "chunk_index": chunk_index,
-                        }
-                    )
-
-                    chunk_index += 1
-
-                current_text = []
-
-                chunk_start = None
-
-                chunk_end = None
-
-        # --------------------------------------------------------
-        # Remaining text
-        # --------------------------------------------------------
-
-        if current_text:
-
-            combined_text = (
-                " ".join(
-                    current_text
-                ).strip()
-            )
-
-            if combined_text:
-
-                chunks.append(
-                    {
-                        "text": combined_text,
-                        "page": 0,
-                        "source": "youtube",
-                        "video_id": video_id,
-                        "url": video_url,
-                        "start_time": chunk_start,
-                        "end_time": chunk_end,
-                        "start_timestamp": (
-                            self.format_timestamp(
-                                chunk_start
-                            )
-                        ),
-                        "end_timestamp": (
-                            self.format_timestamp(
-                                chunk_end
-                            )
-                        ),
-                        "chunk_index": chunk_index,
-                    }
-                )
-
-        return chunks
-
-    # ============================================================
     # MAIN PROCESSOR
     # ============================================================
 
-    def process(
-        self,
-        url: str,
-    ) -> list[dict]:
+    def process(self, url: str) -> dict:
         """
-        Full YouTube → RAG pipeline.
-
-        Returns documents compatible with
-        the existing chunking/vector-store pipeline.
+        Fetches the transcript data for a given YouTube URL.
+        Returns the raw dictionary payload containing snippets.
         """
+        print("\n" + "=" * 70)
+        print("YOUTUBE PROCESSING")
+        print("=" * 70)
 
-        print(
-            "\n"
-            + "=" * 70
-        )
+        video_id = self.extract_video_id(url)
+        print(f"  Video ID: {video_id}")
 
-        print(
-            "YOUTUBE PROCESSING"
-        )
-
-        print(
-            "=" * 70
-        )
-
-        # --------------------------------------------------------
-        # Extract ID
-        # --------------------------------------------------------
-
-        video_id = (
-            self.extract_video_id(
-                url
-            )
-        )
-
-        print(
-            f"✓ Video ID: {video_id}"
-        )
-
-        # --------------------------------------------------------
-        # Transcript
-        # --------------------------------------------------------
-
-        transcript_data = (
-            self.fetch_transcript(
-                video_id
-            )
-        )
-
-        # --------------------------------------------------------
-        # Chunks
-        # --------------------------------------------------------
-
-        chunks = (
-            self.create_chunks(
-                transcript_data,
-                url,
-            )
-        )
-
-        if not chunks:
-
-            raise ValueError(
-                "No YouTube chunks were created."
-            )
-
-        print(
-            f"✓ Created YouTube chunks: "
-            f"{len(chunks)}"
-        )
-
-        print(
-            "\nFirst chunk:"
-        )
-
-        print(
-            chunks[0]["text"][:500]
-        )
-
-        print(
-            f"\nTimestamp: "
-            f"{chunks[0]['start_timestamp']}"
-            f" → "
-            f"{chunks[0]['end_timestamp']}"
-        )
-
-        return chunks
+        transcript_data = self.fetch_transcript(video_id)
+        return transcript_data
