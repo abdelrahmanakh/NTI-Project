@@ -6,7 +6,7 @@ class DocumentChunk:
     """A unified chunk extracted from any document or media."""
     text: str
     source: str
-    page: int | str
+    page: Optional[int | str] = None
     chunk_id: str
     url: Optional[str] = None
     video_id: Optional[str] = None
