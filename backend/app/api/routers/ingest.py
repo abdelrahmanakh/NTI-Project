@@ -125,3 +125,27 @@ async def ingest_image(file: UploadFile = File(...), session_id: str = Form(...)
 async def clear_session(session_id: str):
     vector_store.collection.delete(where={"session_id": session_id})
     return {"status": "success"}
+
+@router.get("/sources/{session_id}")
+async def get_session_sources(session_id: str):
+    """Returns a list of unique sources currently ingested for a session."""
+    try:
+        results = vector_store.collection.get(
+            where={"session_id": session_id},
+            include=["metadatas"]
+        )
+        
+        metadatas = results.get("metadatas", [])
+        unique_sources = set()
+        
+        for meta in metadatas:
+            if meta and "source" in meta:
+                # Format YouTube sources for better readability if needed
+                source = meta["source"]
+                if source == "youtube" and "url" in meta:
+                    source = f"YouTube: {meta['url']}"
+                unique_sources.add(source)
+                
+        return {"status": "success", "sources": list(unique_sources)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

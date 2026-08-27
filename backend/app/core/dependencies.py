@@ -1,6 +1,9 @@
 # app/core/dependencies.py
 from pathlib import Path
+# Add this import at the top
+from app.services.evaluator import EvaluatorService
 
+# At the bottom of the file, under tools initialization:
 from app.services.vector_store import ChromaVectorStore
 from app.services.embeddings import GeminiEmbedder
 from app.services.retriever import Retriever
@@ -35,3 +38,5 @@ yt_processor = YouTubeProcessor()
 chunker = TextChunker()
 
 image_processor = GeminiImageProcessor()
+
+evaluator = EvaluatorService(generator=generator, retriever=retriever, tools=tools)

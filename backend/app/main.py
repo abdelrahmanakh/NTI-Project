@@ -6,7 +6,7 @@ from pathlib import Path
 import mimetypes
 mimetypes.add_type("application/pdf", ".pdf")
 # Add this import:
-from app.api.routers import ingest, tutor, tools
+from app.api.routers import ingest, tutor, tools, evaluation
 
 app = FastAPI(title="EduRAG API")
 
@@ -26,6 +26,7 @@ app.mount("/files", StaticFiles(directory=str(data_dir)), name="files")
 app.include_router(ingest.router)
 app.include_router(tutor.router)
 app.include_router(tools.router)
+app.include_router(evaluation.router)
 
 @app.get("/")
 async def root():
